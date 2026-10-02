@@ -23,38 +23,60 @@ Landing page where people choose a membership fee ("quota") for the XEPC (Xarxa 
 - Icons: `lucide-react`
 - `cn` comes from the `cn` package, re-exported from `@/lib/utils`
 
+## The 4 proposals (debate mockup)
+
+This app is a mockup to debate how XEPC fees should work. `/` explains 4 proposals and links to each flow. All proposals share the sign-up form (`AltaView` → `AltaForm`) and `/gracies`.
+
+| # | Route | Flow | Plan `kind` |
+|---|---|---|---|
+| 1 | `/proposta-1` | XEPC amount (3/5/10/20 or custom > 20 €/month) + optional add-on fees for PAHC/COSHAC, CGT and Gimnàs, summed in one payment | `integrada` |
+| 2 | `/proposta-2` | XEPC amount only; external affiliation links (CGT, PAHC/COSHAC) shown AFTER the form, on `/gracies`. | `aportacio` |
+| 3 | `/proposta-3` (+ `/ja-afiliada`) | Unified fee (precària/base/solidària) split across orgs, with deductions | `unificada` |
+| 4 | `/proposta-4` | Choice: A `/proposta-4/aportacio` (= P1 without add-ons) or B `/proposta-4/afiliacio` (= P3) | `aportacio` / `unificada` |
+
+- `src/lib/plans.ts` is the single source of truth: `PROPOSALS` (landing copy), `XEPC_AMOUNTS`, `ADDONS` (P1 add-on prices), `AFFILIATION_LINKS` (P2), the `Plan` zod union, URL helpers (`planToParams`, `planFromParams`, `altaHref`, `backHref`, `graciesHref`) and `planNeeds` / `planJoins`.
+- Every plan has a `frequency` (mensual/trimestral/anual, `freq` URL param). The alta page (`AltaView`, client) has `FrequencyTabs` to change it in place; it updates the summary and the URL (`history.replaceState`), and `AltaForm` submits the current plan.
+- Each flow's alta route is `${planBase(plan)}/alta`. `/gracies` gets `p` (proposal) and `k` (kind) params.
+- Form sections depend on the plan (`planNeeds`): address if joining PAHC/COSHAC, sector if joining CGT, affiliation numbers only for P3 deductions. Legal text version from `planJoins`.
+- Every alta form is wrapped in a `DemoOverlay` (mockup): a shortcut to `/gracies` so each flow can be tried without filling data, plus "Prefereixo omplir el formulari" to dismiss it. P2's copy mentions the affiliation links.
+- Every proposal page has a `ProposalBanner` (via `proposta-N/layout.tsx`) linking back to `/`.
+- Old routes `/alta` and `/ja-afiliada` only redirect to `/proposta-3/...`. `submitAlta` still lives in `src/app/alta/actions.ts`.
+
 ## Structure
 
 ```
 src/
   app/
-    layout.tsx            # fonts (Archivo, Roboto Mono), lang="ca"
-    globals.css           # theme tokens + XEPC colours
-    page.tsx              # "/" landing: title, benefits, pricing, link to second flow
-    ja-afiliada/page.tsx  # "/ja-afiliada": already-affiliated flow
-    alta/page.tsx         # "/alta?quota=&freq=&orgs=": sign-up form for the chosen quota
-    alta/actions.ts       # submitAlta server action (MOCK: validates, logs, redirects)
-    gracies/page.tsx      # "/gracies": thank-you page
+    page.tsx                  # "/" landing: 4 proposal cards + comparison table
+    proposta-1/ …             # P1 selector + /alta
+    proposta-2/ …             # P2 selector + /alta
+    proposta-3/ …             # P3 landing, /ja-afiliada, /alta
+    proposta-4/ …             # P4 choice, /aportacio(/alta), /afiliacio(/ja-afiliada, /alta)
+    alta/actions.ts           # submitAlta server action (MOCK: validates plan + form, redirects to /gracies)
+    gracies/page.tsx          # thank-you page for every proposal
   components/
-    benefits.tsx          # benefits list with org logos (public/logos) + info Dialog (modal copy lives here)
-    pricing-selector.tsx  # frequency tabs + 3 tier cards; each card links to /alta
-    quota-summary.tsx     # chosen quota box (used in /alta and /gracies)
-    alta-form.tsx         # react-hook-form + zod: personal data, address, sector, IBAN, consents
-    address-fields.tsx    # "Carrer i número" = Google autocomplete combobox; auto-validates on pause/blur
-    form-styles.ts        # shared input class
-    affiliated-flow.tsx   # org checkboxes -> PricingSelector with `excluded`
-    ui/                   # shadcn components
+    flows/                    # per-proposal UI: xepc-amount-picker, integrated-flow (P1), aportacio-flow (P2/P4A),
+                              # unified-landing + affiliated-page (P3/P4B), continue-bar, xepc-header
+    alta-view.tsx             # shared alta page (back link, summary, form)
+    plan-summary.tsx          # summary of any plan (P3 uses quota-summary.tsx)
+    proposal-banner.tsx       # sticky "Proposta N" bar
+    benefits.tsx              # benefits list with org logos + info Dialog
+    pricing-selector.tsx      # P3 frequency tabs + 3 tier cards
+    alta-form.tsx             # react-hook-form + zod; sections from planNeeds(plan)
+    address-fields.tsx        # "Carrer i número" = Google autocomplete combobox; auto-validates on pause/blur
+    affiliated-flow.tsx       # P3 org checkboxes -> PricingSelector with `excluded`
+    ui/                       # shadcn components
   lib/
-    quotes.ts             # single source of truth for tiers, splits, frequencies, pricing
-    alta-schema.ts        # zod schema shared by client and server action; quota URL helpers
-    validators.ts         # DNI/NIE letter check, IBAN mod-97, postal code
-    sectors.ts            # labor sector options
-    google-maps.ts        # Maps JS API loader (@googlemaps/js-api-loader); same APIs as coshac-base-dades
-    address.ts            # classic Places AutocompleteService + Geocoder validation (or mock without key)
-    legal.ts              # unified data-protection text, 4 versions: xepc+coshac+cgt / xepc+cgt / xepc+coshac / xepc
+    plans.ts                  # proposals, plans, URL helpers (see above)
+    quotes.ts                 # P3 tiers, splits, frequencies, formatEuro
+    alta-schema.ts            # zod form schema; altaSchemaFor(planNeeds(plan))
+    validators.ts             # DNI/NIE, IBAN, postal code
+    sectors.ts                # labor sector options
+    google-maps.ts / address.ts  # same Google APIs as coshac-base-dades
+    legal.ts                  # data-protection text, 4 versions chosen by planJoins(plan)
 ```
 
-## Pricing rules (`src/lib/quotes.ts`)
+## Pricing rules — proposal 3 (`src/lib/quotes.ts`)
 
 - Tiers (monthly): Precària 10 €, Base 20 €, Solidària 30 €.
 - Each tier is split per org (`split: Record<OrgKey, number>`):
@@ -73,14 +95,14 @@ src/
 - Accent colours are Tailwind tokens: `bg-xepc-blue` (Precària), `bg-xepc-lilac` (Base), `bg-xepc-orange` (Solidària).
 - Keep pages as server components; put interactivity in `"use client"` components under `src/components/`.
 
-## Sign-up form (`/alta`)
+## Sign-up form (`…/alta`, all proposals)
 
-- Quota selection travels in the URL (`quota`, `freq`, `orgs`); `parseQuotaParams` validates it and `/alta` redirects to `/` if invalid. Never put personal data in URLs.
-- Conditional sections (`requiredSections(excluded)` in `alta-schema.ts`):
-  - Address is only requested if the user is NOT already in PAHC/COSHAC (`pahc` not in `orgs`).
-  - Labor sector is only requested if the user is NOT already in CGT (`cgt` not in `orgs`).
+- The plan travels in the URL (see `planToParams`); `planFromParams` validates it and each alta route redirects to the flow start if invalid. Never put personal data in URLs.
+- Conditional sections (`planNeeds(plan)` in `plans.ts`):
+  - Address is only requested if the person joins PAHC/COSHAC with this plan (P1 add-on, or P3/P4B without `pahc` deducted).
+  - Labor sector is only requested if the person joins CGT with this plan.
   - Section numbers in the form are computed from the visible sections.
-- Validation: `altaSchemaFor(excluded)` (zod) runs on the client via `zodResolver` and again in `submitAlta` (which parses `quota` first to know which fields are required; skipped fields are discarded). `altaSchema` is the all-optional shape used only for typing the form.
+- Validation: `altaSchemaFor(planNeeds(plan))` (zod) runs on the client via `zodResolver` and again in `submitAlta` (which parses `plan` first to know which fields are required; skipped fields are discarded). `altaSchema` is the all-optional shape used only for typing the form.
 - Required vs optional: nom, cognoms, IBAN and both consents are required. DNI/NIE, address and sector are optional (DNI validated only if filled; address must be complete + validated only if any field is filled).
 - Affiliation numbers: if `pahc` is deducted → `numCoshac` required; if `cgt` is deducted → `numCgt` required ("Les teves afiliacions" section).
 - Address uses the SAME Google APIs/key as `../coshac-base-dades` (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`): Maps JavaScript API, Places API (classic, `AutocompleteService`) and Geocoding API (`Geocoder`). Do NOT use Places API (New) or Address Validation API: they're not enabled on that project.
@@ -94,6 +116,7 @@ src/
 
 - `submitAlta` is a mock: persist to DB/CRM and generate the SEPA mandate.
 - Address validation is client-side only; re-validate server-side once a server key exists.
+- P1: the Gimnàs la Ruda is not covered by the legal texts; P2/P4: confirm affiliation links and whether Gimnàs needs one.
 - XEPC legal text in `legal.ts` is a placeholder: needs legal review and real contact details (NIF, address, email).
 - Sector list (`sectors.ts`) to be reviewed with Acció Sindical / CGT.
 - Modal texts in `benefits.tsx` are placeholders; to be reviewed by each organisation.

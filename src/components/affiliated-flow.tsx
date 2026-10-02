@@ -7,7 +7,7 @@ import { PricingSelector } from "@/components/pricing-selector";
 import { AFFILIABLE_ORGS, type OrgKey } from "@/lib/quotes";
 import { cn } from "@/lib/utils";
 
-export function AffiliatedFlow() {
+export function AffiliatedFlow({ proposta }: { proposta: 3 | 4 }) {
   const [orgs, setOrgs] = useState<OrgKey[]>([]);
 
   const toggle = (key: OrgKey, checked: boolean) =>
@@ -51,7 +51,7 @@ export function AffiliatedFlow() {
             Marca almenys una organització per veure la quota reduïda.
           </p>
         )}
-        <PricingSelector excluded={orgs} showOriginal />
+        <PricingSelector proposta={proposta} excluded={orgs} showOriginal />
       </section>
     </div>
   );

@@ -23,8 +23,9 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { altaSchema, altaSchemaFor, requiredSections } from "@/lib/alta-schema";
+import { altaSchema, altaSchemaFor } from "@/lib/alta-schema";
 import { legalVersionFor } from "@/lib/legal";
+import { planJoins, planNeeds, type Plan } from "@/lib/plans";
 import { SECTORS } from "@/lib/sectors";
 import { formatIban } from "@/lib/validators";
 import { cn } from "@/lib/utils";
@@ -33,20 +34,22 @@ type FormInput = z.input<typeof altaSchema>;
 type FormOutput = z.output<typeof altaSchema>;
 
 type AltaFormProps = {
-  quota: FormInput["quota"];
+  plan: Plan;
 };
 
 const legendClass = "mb-2 font-heading text-xl font-extrabold uppercase";
 
-export function AltaForm({ quota }: AltaFormProps) {
+export function AltaForm({ plan }: AltaFormProps) {
   const [pending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
 
-  // Adreça i sector només es demanen si no s'està ja afiliada a PAHC/COSHAC o CGT.
-  const needs = requiredSections(quota.excluded);
+  // Seccions segons el pla: adreça si t'afilies a la PAHC/COSHAC, sector si a la CGT,
+  // números d'afiliació si se'n descompta la part (proposta 3).
+  const needs = useMemo(() => planNeeds(plan), [plan]);
+  const joins = planJoins(plan);
   const resolver = useMemo(
-    () => zodResolver(altaSchemaFor(quota.excluded)) as unknown as Resolver<FormInput, unknown, FormOutput>,
-    [quota.excluded]
+    () => zodResolver(altaSchemaFor(needs)) as unknown as Resolver<FormInput, unknown, FormOutput>,
+    [needs]
   );
 
   // Numeració de seccions segons les que es mostren.
@@ -57,7 +60,7 @@ export function AltaForm({ quota }: AltaFormProps) {
     resolver,
     mode: "onTouched",
     defaultValues: {
-      quota,
+      plan,
       nom: "",
       cognoms: "",
       dni: "",
@@ -92,7 +95,8 @@ export function AltaForm({ quota }: AltaFormProps) {
     setServerError(null);
     startTransition(async () => {
       // Si va bé, l'acció redirigeix a /gracies.
-      const result = await submitAlta(data);
+      // El pla sempre és el de la prop (la periodicitat es pot canviar a la mateixa pàgina).
+      const result = await submitAlta({ ...data, plan });
       if (result && !result.ok) setServerError(result.message);
     });
   };
@@ -240,9 +244,11 @@ export function AltaForm({ quota }: AltaFormProps) {
             <ConsentCheckbox
               name="privacitat"
               control={control}
-              label="Accepto el tractament de les meves dades per gestionar l'afiliació."
+              label={`Accepto el tractament de les meves dades per gestionar ${
+                plan.kind === "aportacio" ? "la meva aportació" : "l'afiliació"
+              }.`}
             >
-              <LegalNotice excluded={quota.excluded} />
+              <LegalNotice joins={joins} />
             </ConsentCheckbox>
           </FieldGroup>
         </FieldSet>
@@ -304,8 +310,8 @@ function ConsentCheckbox({
 }
 
 /** Informació de protecció de dades: text unificat per a les organitzacions on t'afilies. */
-function LegalNotice({ excluded }: { excluded: readonly string[] }) {
-  const { blocks } = legalVersionFor(excluded);
+function LegalNotice({ joins }: { joins: { pahc: boolean; cgt: boolean } }) {
+  const { blocks } = legalVersionFor(joins);
   return (
     <div
       tabIndex={0}

@@ -21,7 +21,8 @@ type QuotaSummaryProps = {
 export function QuotaSummary({ tier: tierKey, frequency, excluded, className, children }: QuotaSummaryProps) {
   const tier = TIERS.find((t) => t.key === tierKey)!;
   const freq = FREQUENCIES.find((f) => f.key === frequency)!;
-  const price = periodPrice(monthlyPrice(tier, excluded), freq.key as Frequency);
+  const monthly = monthlyPrice(tier, excluded);
+  const price = periodPrice(monthly, freq.key as Frequency);
   const excludedLabels = AFFILIABLE_ORGS.filter((o) => excluded.includes(o.key)).map((o) => o.label);
 
   return (
@@ -36,6 +37,7 @@ export function QuotaSummary({ tier: tierKey, frequency, excluded, className, ch
       </div>
       <p className="font-mono text-xs text-black/70">
         Pagament {freq.label.toLowerCase()}
+        {freq.key !== "mensual" && ` · equival a ${formatEuro(monthly)}/mes`}
         {excludedLabels.length > 0 && ` · Sense la part de: ${excludedLabels.join(", ")}`}
       </p>
       {children}

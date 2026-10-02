@@ -1,33 +1,6 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowLeftIcon } from "lucide-react";
+import { redirect } from "next/navigation";
 
-import { AffiliatedFlow } from "@/components/affiliated-flow";
-
-export const metadata: Metadata = {
-  title: "Ja estic afiliada — XEPC",
-};
-
-export default function JaAfiliadaPage() {
-  return (
-    <main className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-4 py-16 sm:py-24">
-      <Link
-        href="/"
-        className="inline-flex w-fit items-center gap-2 font-mono text-sm underline underline-offset-4 hover:no-underline"
-      >
-        <ArrowLeftIcon className="size-4" /> Tornar
-      </Link>
-
-      <header className="flex flex-col gap-4">
-        <h1 className="max-w-3xl font-heading text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl">
-          Ja estàs afiliada? Contribueix amb la XEPC
-        </h1>
-        <p className="max-w-2xl font-mono text-sm">
-          Indica a quines organitzacions ja pagues quota i et descomptarem la seva part.
-        </p>
-      </header>
-
-      <AffiliatedFlow />
-    </main>
-  );
+/** Ruta antiga: ara és /proposta-3/ja-afiliada. */
+export default function OldJaAfiliada() {
+  redirect("/proposta-3/ja-afiliada");
 }

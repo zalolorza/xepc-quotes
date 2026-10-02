@@ -11,18 +11,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import type { OrgKey } from "@/lib/quotes";
 
 type Logo = { src: string; alt: string; width: number; height: number };
 
-type Benefit = {
+export type Benefit = {
+  /** Espai al qual correspon (per lligar-lo amb el repartiment de la quota). */
+  org: OrgKey;
   title: string;
   logos: Logo[];
   /** Text del modal. TODO: revisar i completar amb cada organització. */
   info: string[];
 };
 
-const BENEFITS: Benefit[] = [
+export const BENEFITS: Benefit[] = [
   {
+    org: "xepc",
     title: "Contribució a la XEPC",
     logos: [{ src: "/logos/logo-xepc.svg", alt: "XEPC", width: 134, height: 214 }],
     info: [
@@ -31,6 +35,7 @@ const BENEFITS: Benefit[] = [
     ],
   },
   {
+    org: "cgt",
     title: "Afiliació a Acció Sindical Bages i CGT",
     logos: [
       { src: "/logos/logo-accio-sindical-bages.webp", alt: "Acció Sindical Bages", width: 512, height: 512 },
@@ -42,8 +47,8 @@ const BENEFITS: Benefit[] = [
     ],
   },
   {
-    title:
-      "Afiliació a la PAHC Bages i la COSHAC",
+    org: "pahc",
+    title: "Afiliació a la PAHC Bages i la COSHAC",
     logos: [
       { src: "/logos/logo-pahc.svg", alt: "PAHC Bages", width: 164, height: 122 },
       { src: "/logos/logo-coshac-2.svg", alt: "COSHAC", width: 172, height: 213 },
@@ -54,6 +59,7 @@ const BENEFITS: Benefit[] = [
     ],
   },
   {
+    org: "gimnas",
     title: "Afiliació al Gimnàs Popular la Ruda",
     logos: [{ src: "/logos/logo-ruda.png", alt: "Gimnàs Popular la Ruda", width: 382, height: 382 }],
     info: [

@@ -2,12 +2,12 @@
  * Informació de protecció de dades de l'alta.
  *
  * Un sol text unificat per a totes les organitzacions on la persona s'afilia
- * amb aquesta quota. Hi ha 4 versions segons el que ja tingui:
+ * amb el pla triat (vegeu `planJoins`). Hi ha 4 versions:
  *
- *   - xepc+coshac+cgt  → no està afiliada a cap
- *   - xepc+cgt         → ja està a la PAHC/COSHAC
- *   - xepc+coshac      → ja està a la CGT
- *   - xepc             → ja està a totes dues
+ *   - xepc+coshac+cgt  → s'afilia a la PAHC/COSHAC i a la CGT
+ *   - xepc+cgt         → només a la CGT
+ *   - xepc+coshac      → només a la PAHC/COSHAC
+ *   - xepc             → cap (només aportació a la XEPC, o ja afiliada a totes dues)
  *
  * Basat en els textos actuals de la COSHAC i de la CGT de Catalunya.
  * TODO: revisió legal; completar NIF i contacte de la XEPC i contacte de la COSHAC.
@@ -146,12 +146,10 @@ export const LEGAL_VERSIONS: Record<LegalVersionKey, LegalVersion> = {
   },
 };
 
-/** Versió aplicable segons les organitzacions on ja s'està afiliada. */
-export function legalVersionFor(excluded: readonly string[]): LegalVersion {
-  const coshac = !excluded.includes("pahc");
-  const cgt = !excluded.includes("cgt");
-  if (coshac && cgt) return LEGAL_VERSIONS["xepc+coshac+cgt"];
-  if (cgt) return LEGAL_VERSIONS["xepc+cgt"];
-  if (coshac) return LEGAL_VERSIONS["xepc+coshac"];
+/** Versió aplicable segons les organitzacions on la persona s'afilia (a més de la XEPC). */
+export function legalVersionFor(joins: { pahc: boolean; cgt: boolean }): LegalVersion {
+  if (joins.pahc && joins.cgt) return LEGAL_VERSIONS["xepc+coshac+cgt"];
+  if (joins.cgt) return LEGAL_VERSIONS["xepc+cgt"];
+  if (joins.pahc) return LEGAL_VERSIONS["xepc+coshac"];
   return LEGAL_VERSIONS.xepc;
 }

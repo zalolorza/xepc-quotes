@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { SECTORS } from "@/lib/sectors";
-import { FREQUENCIES, TIERS, type OrgKey } from "@/lib/quotes";
+import { planSchema, type planNeeds } from "@/lib/plans";
 import { isValidDni, isValidIban, isValidPostalCode } from "@/lib/validators";
 
 const required = (message: string) => z.string().trim().min(1, message);
@@ -40,12 +40,6 @@ export function hasAddress(a?: Partial<z.infer<typeof addressSchema>>): boolean 
 
 export type AddressValues = z.infer<typeof addressSchema>;
 
-export const quotaSchema = z.object({
-  tier: z.enum(TIERS.map((t) => t.key) as [string, ...string[]]),
-  frequency: z.enum(FREQUENCIES.map((f) => f.key) as [string, ...string[]]),
-  excluded: z.array(z.enum(["gimnas", "pahc", "cgt"])),
-});
-
 const sectorSchema = z.enum(SECTORS.map((s) => s.value) as [string, ...string[]], {
   error: "Tria un sector laboral",
 });
@@ -54,7 +48,7 @@ const sectorSchema = z.enum(SECTORS.map((s) => s.value) as [string, ...string[]]
 const skipped = z.unknown().optional().transform(() => undefined);
 
 const baseFields = {
-  quota: quotaSchema,
+  plan: planSchema,
   nom: required("Indica el teu nom"),
   cognoms: required("Indica els teus cognoms"),
   /** Opcional; si s'omple, ha de ser vàlid. */
@@ -67,22 +61,10 @@ const baseFields = {
   privacitat: z.boolean().refine((v) => v, "Cal acceptar la política de privacitat"),
 };
 
-/** Quins camps (opcionals) es mostren segons les organitzacions on ja s'està afiliada. */
-export function requiredSections(excluded: readonly string[]) {
-  return {
-    // L'adreça la necessita la PAHC/COSHAC; si ja hi ets afiliada, ja la tenen.
-    adreca: !excluded.includes("pahc"),
-    // El sector laboral el necessita la CGT; si ja hi ets afiliada, ja el tenen.
-    sector: !excluded.includes("cgt"),
-    // Si es descompta una part, cal el número d'afiliació per comprovar-ho.
-    numCoshac: excluded.includes("pahc"),
-    numCgt: excluded.includes("cgt"),
-  };
-}
+export type FormNeeds = ReturnType<typeof planNeeds>;
 
-/** Esquema de l'alta adaptat a la quota triada (client i servidor). */
-export function altaSchemaFor(excluded: readonly string[]) {
-  const needs = requiredSections(excluded);
+/** Esquema de l'alta adaptat al pla triat (client i servidor). Vegeu `planNeeds`. */
+export function altaSchemaFor(needs: FormNeeds) {
   return z.object({
     ...baseFields,
     adreca: needs.adreca ? addressSchema : skipped,
@@ -102,25 +84,3 @@ export const altaSchema = z.object({
 });
 
 export type AltaValues = z.infer<typeof altaSchema>;
-
-/** Paràmetres de cerca → selecció de quota (o null si no són vàlids). */
-export function parseQuotaParams(params: {
-  quota?: string | string[];
-  freq?: string | string[];
-  orgs?: string | string[];
-}): { tier: string; frequency: string; excluded: Exclude<OrgKey, "xepc">[] } | null {
-  const first = (v?: string | string[]) => (Array.isArray(v) ? v[0] : v);
-  const orgs = first(params.orgs);
-  const parsed = quotaSchema.safeParse({
-    tier: first(params.quota),
-    frequency: first(params.freq) ?? "mensual",
-    excluded: orgs ? orgs.split(",").filter(Boolean) : [],
-  });
-  return parsed.success ? parsed.data : null;
-}
-
-export function quotaHref(tier: string, frequency: string, excluded: string[] = []): string {
-  const params = new URLSearchParams({ quota: tier, freq: frequency });
-  if (excluded.length) params.set("orgs", excluded.join(","));
-  return `/alta?${params}`;
-}

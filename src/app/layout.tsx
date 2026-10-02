@@ -15,7 +15,7 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Quotes — XEPC",
+  title: "Propostes de quotes — XEPC",
   description: "Aporta a la lluita i afilia't al sindicalisme popular.",
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ca"
       className={`${archivo.variable} ${robotoMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col pb-10">{children}</body>
     </html>
   );
 }

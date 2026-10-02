@@ -101,3 +101,11 @@ const decFormatter = new Intl.NumberFormat("ca-ES", {
 export function formatEuro(value: number): string {
   return Number.isInteger(value) ? intFormatter.format(value) : decFormatter.format(value);
 }
+
+/** Espais que reben part de la quota unificada (ordre de presentació a les targetes). */
+export const SPLIT_ORGS: { key: OrgKey; label: string }[] = [
+  { key: "xepc", label: "Contribució a la XEPC" },
+  { key: "cgt", label: "Afiliació a Acció Sindical / CGT" },
+  { key: "pahc", label: "Afiliació a la PAHC / COSHAC" },
+  { key: "gimnas", label: "Afiliació al Gimnàs la Ruda" },
+];

@@ -13,11 +13,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FrequencyTabs } from "@/components/frequency-tabs";
+import { SpacesInfo } from "@/components/spaces-info";
 import { cn } from "@/lib/utils";
-import { quotaHref } from "@/lib/alta-schema";
+import { altaHref } from "@/lib/plans";
 import {
   FREQUENCIES,
+  SPLIT_ORGS,
   TIERS,
   formatEuro,
   monthlyPrice,
@@ -27,13 +29,15 @@ import {
 } from "@/lib/quotes";
 
 type PricingSelectorProps = {
+  /** Proposta 3, o opció B de la proposta 4 (mateix recorregut, rutes diferents). */
+  proposta: 3 | 4;
   /** Organitzacions a descomptar de la quota. */
   excluded?: OrgKey[];
   /** Mostra el preu original ratllat quan hi ha descompte. */
   showOriginal?: boolean;
 };
 
-export function PricingSelector({ excluded = [], showOriginal = false }: PricingSelectorProps) {
+export function PricingSelector({ proposta, excluded = [], showOriginal = false }: PricingSelectorProps) {
   const [frequency, setFrequency] = useState<Frequency>("mensual");
 
   const freq = FREQUENCIES.find((f) => f.key === frequency)!;
@@ -41,19 +45,7 @@ export function PricingSelector({ excluded = [], showOriginal = false }: Pricing
 
   return (
     <div className="flex flex-col items-center gap-8">
-      <Tabs value={frequency} onValueChange={(v) => setFrequency(v as Frequency)}>
-        <TabsList className="h-11! rounded-full border border-black bg-white p-1">
-          {FREQUENCIES.map((f) => (
-            <TabsTrigger
-              key={f.key}
-              value={f.key}
-              className="rounded-full px-5 font-mono text-sm data-active:bg-black! data-active:text-white!"
-            >
-              {f.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <FrequencyTabs value={frequency} onChange={setFrequency} />
 
       <div className="grid w-full gap-4 md:grid-cols-3">
         {TIERS.map((tier) => {
@@ -93,11 +85,36 @@ export function PricingSelector({ excluded = [], showOriginal = false }: Pricing
                 <span className="min-h-4 font-mono text-xs text-black/60">
                   {frequency !== "mensual" && `${formatEuro(monthly)}/mes`}
                 </span>
+
+                {/* Què inclou: aportació a cada espai segons el repartiment de la quota */}
+                <ul className="mt-4 mb-2 flex flex-col divide-y divide-black/20 border-y border-black/20 font-mono text-xs">
+                  {SPLIT_ORGS.map((org) => {
+                    const deducted = excluded.includes(org.key);
+                    return (
+                      <li
+                        key={org.key}
+                        className={cn("flex items-baseline justify-between gap-3 py-2", deducted && "text-black/45")}
+                      >
+                        <span className={cn(deducted && "line-through")}>{org.label}</span>
+                        <span className="shrink-0 font-medium">
+                          {deducted ? "Ja hi estàs" : formatEuro(periodPrice(tier.split[org.key], frequency))}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <SpacesInfo tier={tier} frequency={frequency} excluded={excluded} />
               </CardContent>
 
               <CardFooter className="mt-auto border-0 bg-transparent">
                 <Link
-                  href={quotaHref(tier.key, frequency, excluded.filter((o) => o !== "xepc"))}
+                  href={altaHref({
+                    kind: "unificada",
+                    proposta,
+                    tier: tier.key,
+                    frequency,
+                    excluded: excluded.filter((o) => o !== "xepc"),
+                  })}
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     "group/cta h-11 w-full rounded-full border-black bg-white font-mono text-sm text-black hover:bg-black hover:text-white"
