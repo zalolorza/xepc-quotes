@@ -31,7 +31,7 @@ This app is a mockup to debate how XEPC fees should work. `/` explains 4 proposa
 |---|---|---|---|
 | 1 | `/proposta-1` | XEPC amount (3/5/10/20 or custom > 20 €/month) + optional add-on fees for PAHC/COSHAC, CGT and Gimnàs, summed in one payment | `integrada` |
 | 2 | `/proposta-2` | XEPC amount only; external affiliation links (CGT, PAHC/COSHAC) shown AFTER the form, on `/gracies`. | `aportacio` |
-| 3 | `/proposta-3` (+ `/ja-afiliada`) | Unified fee (precària/base/solidària) split across orgs, with deductions | `unificada` |
+| 3 | `/proposta-3` (+ `/ja-afiliada`) | Unified fee (reduïda/base/solidària) split across orgs, with deductions | `unificada` |
 | 4 | `/proposta-4` | Choice: A `/proposta-4/aportacio` (= P1 without add-ons) or B `/proposta-4/afiliacio` (= P3) | `aportacio` / `unificada` |
 
 - `src/lib/plans.ts` is the single source of truth: `PROPOSALS` (landing copy), `XEPC_AMOUNTS`, `ADDONS` (P1 add-on prices), `AFFILIATION_LINKS` (P2), the `Plan` zod union, URL helpers (`planToParams`, `planFromParams`, `altaHref`, `backHref`, `graciesHref`) and `planNeeds` / `planJoins`.
@@ -78,12 +78,12 @@ src/
 
 ## Pricing rules — proposal 3 (`src/lib/quotes.ts`)
 
-- Tiers (monthly): Precària 10 €, Base 20 €, Solidària 30 €.
+- Tiers (monthly): Reduïda (key `precaria`) 10 €, Base 20 €, Solidària 30 €.
 - Each tier is split per org (`split: Record<OrgKey, number>`):
-  - Precària: XEPC 1.16 / Gimnàs 1.5 / PAHC 1.5 / CGT 5.86
+  - Reduïda: XEPC 1.16 / Gimnàs 1.5 / PAHC 1.5 / CGT 5.86
   - Bàsica: XEPC 3 / Gimnàs 5 / PAHC 5 / CGT 6.9
   - Solidària: XEPC 8.28 / Gimnàs 5 / PAHC 5 / CGT 11.72
-- `monthlyPrice(tier, excluded)`: no exclusions → nominal price; with exclusions → **sum of the remaining parts** (the splits don't add up exactly to the nominal price for Precària and Bàsica, so this rule matters).
+- `monthlyPrice(tier, excluded)`: no exclusions → nominal price; with exclusions → **sum of the remaining parts** (the splits don't add up exactly to the nominal price for Reduïda and Base, so this rule matters).
 - Frequencies: mensual ×1, trimestral ×3, anual ×12. No discounts.
 - Format money only with `formatEuro` (ca-ES; no decimals when the value is whole, otherwise 2).
 - Change prices or splits in `quotes.ts` only; never hardcode amounts in components.
@@ -92,7 +92,7 @@ src/
 
 - All user-facing copy is in **Catalan**. Use the feminine generic as in the existing copy ("afiliada").
 - Visual style matches the main XEPC site (`../xepc-2026`): `#ececec` background, black text and borders, pill shapes (`rounded-full` / `rounded-3xl`), Archivo for uppercase headings (`font-heading`), Roboto Mono for body (`font-mono`).
-- Accent colours are Tailwind tokens: `bg-xepc-blue` (Precària), `bg-xepc-lilac` (Base), `bg-xepc-orange` (Solidària).
+- Accent colours are Tailwind tokens: `bg-xepc-blue` (Reduïda), `bg-xepc-lilac` (Base), `bg-xepc-orange` (Solidària).
 - Keep pages as server components; put interactivity in `"use client"` components under `src/components/`.
 
 ## Sign-up form (`…/alta`, all proposals)

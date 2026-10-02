@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, InfoIcon } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
 import {
@@ -106,23 +106,42 @@ export function PricingSelector({ proposta, excluded = [], showOriginal = false 
                 <SpacesInfo tier={tier} frequency={frequency} excluded={excluded} />
               </CardContent>
 
-              <CardFooter className="mt-auto border-0 bg-transparent">
-                <Link
-                  href={altaHref({
-                    kind: "unificada",
-                    proposta,
-                    tier: tier.key,
-                    frequency,
-                    excluded: excluded.filter((o) => o !== "xepc"),
-                  })}
-                  className={cn(
-                    buttonVariants({ size: "lg" }),
-                    "group/cta h-11 w-full rounded-full border-black bg-white font-mono text-sm text-black hover:bg-black hover:text-white"
-                  )}
-                >
-                  Tria aquesta quota
-                  <ArrowRightIcon className="transition-transform group-hover/cta:translate-x-1" />
-                </Link>
+              <CardFooter className="mt-auto flex-col items-stretch gap-3 border-0 bg-transparent">
+                {tier.validationNote ? (
+                  <>
+                    <p role="note" className="flex gap-2 font-mono text-xs leading-relaxed">
+                      <InfoIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
+                      {tier.validationNote}
+                    </p>
+                    {/* <span
+                      role="link"
+                      aria-disabled="true"
+                      className={cn(
+                        buttonVariants({ size: "lg" }),
+                        "h-11 w-full cursor-not-allowed rounded-full border-black/40 bg-white/50 font-mono text-sm text-black/40"
+                      )}
+                    >
+                      Tria aquesta quota
+                    </span> */}
+                  </>
+                ) : (
+                  <Link
+                    href={altaHref({
+                      kind: "unificada",
+                      proposta,
+                      tier: tier.key,
+                      frequency,
+                      excluded: excluded.filter((o) => o !== "xepc"),
+                    })}
+                    className={cn(
+                      buttonVariants({ size: "lg" }),
+                      "group/cta h-11 w-full rounded-full border-black bg-white font-mono text-sm text-black hover:bg-black hover:text-white",
+                    )}
+                  >
+                    Tria aquesta quota
+                    <ArrowRightIcon className="transition-transform group-hover/cta:translate-x-1" />
+                  </Link>
+                )}
               </CardFooter>
             </Card>
           );

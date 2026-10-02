@@ -22,17 +22,24 @@ export type Tier = {
   split: Record<OrgKey, number>;
   /** Classe de color de fons de la targeta. */
   accent: string;
+  /**
+   * Si la quota l'ha de validar el col·lectiu, no es pot triar directament:
+   * la targeta mostra aquest missatge i el botó queda desactivat.
+   */
+  validationNote?: string;
 };
 
 export const TIERS: Tier[] = [
   {
     key: "precaria",
-    name: "Quota precària",
+    name: "Quota reduïda",
     description:
       "Per a les persones a l'atur o amb dificultats econòmiques.",
     monthly: 10,
     split: { xepc: 1.16, gimnas: 1.5, pahc: 1.5, cgt: 5.86 },
     accent: "bg-xepc-blue",
+    validationNote:
+      "La quota reduïda ha de ser validada pel teu col·lectiu. Si us plau, parla amb la persona referent del teu col·lectiu.",
   },
   {
     key: "basica",

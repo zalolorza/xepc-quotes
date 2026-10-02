@@ -17,7 +17,7 @@ export function AffiliatedFlow({ proposta }: { proposta: 3 | 4 }) {
     <div className="flex flex-col gap-14">
       <section className="flex flex-col gap-5" aria-labelledby="step-1">
         <h2 id="step-1" className="font-heading text-2xl font-extrabold uppercase">
-          <span className="mr-2 font-black">1.</span>A quines organitzacions estàs afiliada?
+          <span className="mr-2 font-black">1.</span>A quines organitzacions ja estàs afiliada?
         </h2>
         <div className="grid gap-3 sm:grid-cols-3">
           {AFFILIABLE_ORGS.map((org) => {
@@ -48,7 +48,7 @@ export function AffiliatedFlow({ proposta }: { proposta: 3 | 4 }) {
         </h2>
         {orgs.length === 0 && (
           <p className="font-mono text-sm text-black/60">
-            Marca almenys una organització per veure la quota reduïda.
+            Marca almenys una organització per veure el preu amb el descompte.
           </p>
         )}
         <PricingSelector proposta={proposta} excluded={orgs} showOriginal />

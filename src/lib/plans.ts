@@ -55,7 +55,7 @@ export const PROPOSALS: {
     href: "/proposta-3",
     title: "Afiliació sindical unificada",
     summary:
-      "Una quota única (precària, base o solidària) que inclou la XEPC, la PAHC/COSHAC, la CGT i el Gimnàs, repartida entre totes.",
+      "Una quota única (reduïda, base o solidària) que inclou la XEPC, la PAHC/COSHAC, la CGT i el Gimnàs, repartida entre totes.",
     steps: [
       "Tries una de les tres quotes (10, 20 o 30 € al mes) i la periodicitat.",
       "Si ja estàs afiliada a alguna organització, se't descompta la seva part.",
