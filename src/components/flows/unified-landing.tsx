@@ -29,9 +29,6 @@ export function UnifiedLanding({ proposta }: { proposta: 3 | 4 }) {
       </header>
 
       <section className="flex w-full flex-col gap-6" aria-labelledby="quotes">
-        <h2 id="quotes" className="text-center font-heading text-2xl font-extrabold uppercase">
-          Tria la teva quota
-        </h2>
         <PricingSelector proposta={proposta} />
       </section>
 
